@@ -1,0 +1,22 @@
+.content {
+    width: 100%;
+    text-align: center;
+}
+
+.content p:hover {
+    color: blue;
+}
+
+.content h1 {
+    margin-top: 50px;
+}
+
+p {
+    width: 120px;
+}
+
+.content p:hover,
+.content h1:hover {
+    color: blue;
+}
+
