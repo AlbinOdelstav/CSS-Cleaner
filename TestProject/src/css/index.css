@@ -1,0 +1,34 @@
+.content {
+    width: 100%;
+    text-align: center;
+}
+
+.content p:hover .not-used {
+    color: blue;
+}
+
+#not-used,
+.content h1 {
+    margin-top: 50px;
+}
+
+input {
+    width: 100px;
+}
+
+p input:hover {
+    width: 120px;
+}
+
+.content p:hover,
+.content h1:hover, #not-used {
+    color: blue;
+}
+
+.not-used {
+    color: cyan;
+}
+
+#not-used {
+    background-color: cyan;
+}
