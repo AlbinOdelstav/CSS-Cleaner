@@ -6,6 +6,7 @@ import re
 def print_help():
     print("help")
 
+
 def get_value(css):
     value = css["value"]
     if css["type"] == "class":
@@ -13,6 +14,7 @@ def get_value(css):
     elif css["type"] == "id":
         value = "#" + value
     return value
+
 
 def extract_id(html_id):
     html_id = html_id.replace(',', '')
@@ -29,13 +31,12 @@ def extract_id(html_id):
         id_obj = {"type": "class", "value": html_id.replace('.', ''), "used": False}
     else:
         id_obj = {"type": "tag", "value": html_id, "used": False}
-
     return id_obj
 
 
 def build_css_list(filename):
     css_list = []
-    file = open(filename, mode='r')
+    file = open(filename, mode='r', encoding='utf-8')
     css_block = False
 
     for line in file:
@@ -130,8 +131,8 @@ def is_unused_element(html_id, css_list):
 
 
 def delete_all(css_location, css_list):
-    with open(css_location, mode='r') as in_file, \
-            open('output.css', mode='w') as out_file:
+    with open(css_location, mode='r', encoding='utf-8') as in_file, \
+            open('output.css', mode='w', encoding='utf-8') as out_file:
 
         unused_block = True
         css_block = False
@@ -150,9 +151,6 @@ def delete_all(css_location, css_list):
 
                     for html_id in html_ids:
                         if not html_id == "{":
-                            for stored_line in stored_lines:
-                                out_file.write(stored_line)
-                            stored_lines = []
                             html_id = extract_id(html_id)
                             if html_id["type"] is None:
                                 continue
@@ -162,6 +160,9 @@ def delete_all(css_location, css_list):
                         else:
                             css_block = True
                             if not unused_block:
+                                for stored_line in stored_lines:
+                                    out_file.write(stored_line)
+                                stored_lines = []
                                 out_file.write(line)
                             continue
 
@@ -186,53 +187,96 @@ def delete_all(css_location, css_list):
                     out_file.write(line)
 
 
-def main():
+def scan_html_files(filenames, css_list):
+    for i in range(len(css_list)):
+        for filename in filenames:
+            file = open(filename, mode='r', encoding='utf-8').read()
+            if css_list[i]["type"] == "class":
+                reg = re.compile("class=." + re.escape(css_list[i]["value"]) + ".")
+            elif css_list[i]["type"] == "id":
+                reg = re.compile("id=." + re.escape(css_list[i]["value"]) + ".")
+            else:
+                reg = re.compile("<" + re.escape(css_list[i]["value"]))
 
+            if bool(re.search(reg, file)):
+                css_list[i]["used"] = True
+                continue
+
+    css_list = list(filter(lambda x: x["used"] is False, css_list))
+
+    return css_list
+
+
+def get_html_locations():
+    html_locations = []
+
+    while True:
+        html_location = input("HTML directory location: ")
+        if not os.path.exists(html_location):
+            print("Directory not found")
+        else:
+            if html_location[-1:] != "\\":
+                html_location = html_location + "\\"
+            if html_location not in html_locations:
+                html_locations.append(html_location)
+                print("\nDirectories that will be scanned:")
+                for directory in html_locations:
+                    print(directory)
+            else:
+                print("Directory already added")
+            print("\nOptions:")
+            print("1. Add one more")
+            print("2. Done")
+            user_input = input(": ")
+            while user_input != "1" and user_input != "2":
+                user_input = input("Provide a number from the options: ")
+            if int(user_input) == 2:
+                break
+    extensions = input("HTML extensions, separate with space (e.g html ejs): ").split()
+
+    final_directories = []
+    try:
+        for directory in html_locations:
+            for extension in extensions:
+                filenames = [directory + filename for filename in os.listdir(directory)]
+                filenames = list(filter(lambda x: (x[-len(extension):] == extension), filenames))
+                final_directories.extend(filenames)
+    except:
+        print("Woops, something went wrong")
+        sys.exit()
+
+    if not final_directories:
+        print("No files with the provided extensions found")
+        sys.exit()
+
+    print("Found html files:")
+    for filename in final_directories:
+        print(filename)
+
+    return final_directories
+
+
+def main():
     css_location = input("CSS file location (e.g C:\\Users\\username\\TestProject\\src\\css\\index.css):\n")
 
     if not os.path.isfile(css_location):
         print("File not found")
         sys.exit()
 
-    html_location = input("HTML directory location: ")
-    if not os.path.exists(html_location):
-        print("Directory not found")
-        sys.exit()
+    html_files = get_html_locations()
 
-    try:
-        filenames = list(filter(lambda x: x[-5:] == ".html", os.listdir(html_location)))
-    except:
-        print("No html files found")
-        sys.exit()
-
-    if not filenames:
-        print("No html files found")
-        sys.exit()
-
-    print("Found html files:")
-    for filename in filenames:
-        print(filename)
     print("\nBuilding CSS list..")
     css_list = build_css_list(css_location)
-    print("Done! Would you like to go through the list and correct eventual errors? [y/n]: ", end='')
+
+    print("Done!\nThis program does not take CSS that is used in JS-files into account, you need to exclude these "
+          "manually. Would you like to go through the list and do that and/or correct eventual errors? [y/n]: ", end='')
     if input() == 'y':
         print("")
         css_list = evaluate_list(css_list)
 
     print("\nScanning files..")
-    for i in range(0, len(css_list)):
-        for filename in filenames:
-            file = open(html_location + "\\" + filename, mode='r').read()
-            if css_list[i]["type"] == "class":
-                reg = re.compile("class=." + css_list[i]["value"] + ".")
-            elif css_list[i]["type"] == "id":
-                reg = re.compile("id=." + css_list[i]["value"] + ".")
-            else:
-                reg = re.compile("<" + css_list[i]["value"])
+    css_list = scan_html_files(html_files, css_list)
 
-            css_list[i]["used"] = bool(re.search(reg, file))
-
-    css_list = list(filter(lambda x: x["used"] is False, css_list))
     if css_list:
         print("Found " + str(len(css_list)) + " unused CSS elements:")
         for i in range(0, len(css_list)):
@@ -245,7 +289,7 @@ def main():
         print("0. Exit and go on with your life, maybe have a coffee or something")
         user_input = input()
 
-        while not user_input.isdigit() or not 0 < int(user_input) < 2:
+        while user_input != "1" and user_input != "2" and user_input != "0":
             user_input = input("Provide a number from the options: ")
 
         if int(user_input) == 1:
