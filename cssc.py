@@ -268,8 +268,9 @@ def main():
     print("\nBuilding CSS list..")
     css_list = build_css_list(css_location)
 
-    print("Done!\nThis program does not take CSS that is used in JS-files into account, you need to exclude these "
-          "manually. Would you like to go through the list and do that and/or correct eventual errors? [y/n]: ", end='')
+    print("Done!\nThis program does not take CSS that is used in script files such as "
+          "JavaScript or TypeScript into account, you need to exclude these from the options. "
+          "Would you like to go through the list and do that and/or correct eventual errors? [y/n]: ", end='')
     if input() == 'y':
         print("")
         css_list = evaluate_list(css_list)
