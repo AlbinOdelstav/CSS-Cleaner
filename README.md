@@ -1,4 +1,4 @@
-## About CSS Cleaner
+### About CSS Cleaner
 CSS Cleaner removes CSS elements from your CSS files that are no longer used in any of your template files. You were too busy focusing on the template and forgot to clean your CSS file, now it is extremely cluttered and it drives you crazy, so here we are.
 
 ### Usage
