@@ -1,6 +1,6 @@
 import os
 import sys
-from css_builder.css_list_builder import build_css_list
+from css_builder.css_list_builder import Builder
 from scanner.scanner import scan_html_files
 from common import get_value
 from cleaner.cleaner import clean
@@ -125,7 +125,8 @@ def main():
     html_files = menu_get_html_locations()
 
     print("\nBuilding CSS list..")
-    css_list = build_css_list(css_location)
+    css_builder = Builder(css_location)
+    css_list = css_builder.build_css_list()
 
     print("Done!\nThis program does not take CSS that is used in script files such as\n"
           "JavaScript or TypeScript into account, you need to exclude these from the options.\n"
