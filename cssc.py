@@ -1,20 +1,12 @@
 import os
 import sys
-import re
-from css_list_builder import build_css_list, extract_id
-from scanner import scan_html_files
+from css_builder.css_list_builder import build_css_list
+from scanner.scanner import scan_html_files
+from common import get_value
+from cleaner.cleaner import clean
 
 
-def get_value(css):
-    value = css["value"]
-    if css["type"] == "class":
-        value = "." + value
-    elif css["type"] == "id":
-        value = "#" + value
-    return value
-
-
-def evaluate_html_id(html_id):
+def menu_evaluate_html_id(html_id):
     print("\nYou chose: " + html_id)
     print("1. Change")
     if " [EXCLUDED]" not in html_id:
@@ -33,7 +25,7 @@ def evaluate_html_id(html_id):
         return -1
 
 
-def evaluate_list(css_list):
+def menu_evaluate_list(css_list):
     limit = 10
     offset = 0
     length = (len(css_list) // limit) + 1
@@ -53,7 +45,7 @@ def evaluate_list(css_list):
         user_input = input("Input a number for options, press enter to proceed or type exit to stop: ")
         if user_input.isdigit():
             chosen_index = (int(user_input) - 1) + (limit * offset)
-            modified_html_id = evaluate_html_id(css_list[chosen_index]["value"])
+            modified_html_id = menu_evaluate_html_id(css_list[chosen_index]["value"])
             if modified_html_id == -1:
                 if " [EXCLUDED]" not in css_list[chosen_index]:
                     css_list[chosen_index]["value"] = css_list[chosen_index]["value"] + " [EXCLUDED]"
@@ -75,71 +67,7 @@ def evaluate_list(css_list):
     return css_list
 
 
-def is_unused_element(html_id, css_list):
-    for css in css_list:
-        if html_id["value"] == css["value"] and html_id["type"] == css["type"]:
-            return True
-    return False
-
-
-def delete_all(css_location, css_list):
-    with open(css_location, mode='r', encoding='utf-8') as in_file, \
-            open('output.css', mode='w', encoding='utf-8') as out_file:
-
-        unused_block = True
-        css_block = False
-        stored_lines = []
-
-        for line in in_file:
-            if not css_block:
-                unused_block = True
-                for prepared_html_id in line.split():
-                    if prepared_html_id.count('.') > 1:
-                        html_ids = prepared_html_id.split('.')
-                        for i in range(0, len(html_ids)):
-                            html_ids[i] = "." + html_ids[i]
-                    else:
-                        html_ids = [prepared_html_id]
-
-                    for html_id in html_ids:
-                        if not html_id == "{":
-                            html_id = extract_id(html_id)
-                            if html_id["type"] is None:
-                                continue
-
-                            if unused_block:
-                                unused_block = is_unused_element(html_id, css_list)
-                        else:
-                            css_block = True
-                            if not unused_block:
-                                for stored_line in stored_lines:
-                                    out_file.write(stored_line)
-                                stored_lines = []
-                                out_file.write(line)
-                            continue
-
-                        if is_unused_element(html_id, css_list):
-                            for split in line.split():
-                                if get_value(html_id) in split:
-                                    line = line.replace(split, "")
-
-                            line = line.replace("  ", "")
-                            line = re.sub(r"(.){", r"\1 {", line)
-                            line = re.sub(r", {", r" {", line)
-
-                if not css_block and not unused_block:
-                    stored_lines.append(line)
-
-            else:
-                if line.strip() == "}":
-                    if not unused_block:
-                        out_file.write(line + "\n")
-                    css_block = False
-                elif not unused_block:
-                    out_file.write(line)
-
-
-def get_html_locations():
+def menu_get_html_locations():
     html_locations = []
 
     while True:
@@ -194,7 +122,7 @@ def main():
         print("File not found")
         sys.exit()
 
-    html_files = get_html_locations()
+    html_files = menu_get_html_locations()
 
     print("\nBuilding CSS list..")
     css_list = build_css_list(css_location)
@@ -204,7 +132,7 @@ def main():
           "Would you like to go through the list and do that and/or correct eventual errors? [y/n]: ", end='')
     if input() == 'y':
         print("")
-        css_list = evaluate_list(css_list)
+        css_list = menu_evaluate_list(css_list)
 
     print("\nScanning files..")
     css_list = scan_html_files(html_files, css_list)
@@ -225,7 +153,7 @@ def main():
             user_input = input("Provide a number from the options: ")
 
         if int(user_input) == 1:
-            delete_all(css_location, css_list)
+            clean(css_location, css_list)
         if int(user_input) == 2:
             print("Bummer, this option has not been implemented yet :(")
 
