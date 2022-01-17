@@ -1,10 +1,8 @@
 import os
 import sys
 import re
-
-
-def print_help():
-    print("help")
+from css_list_builder import build_css_list, extract_id
+from scanner import scan_html_files
 
 
 def get_value(css):
@@ -14,52 +12,6 @@ def get_value(css):
     elif css["type"] == "id":
         value = "#" + value
     return value
-
-
-def extract_id(html_id):
-    html_id = html_id.replace(',', '')
-    id_obj = {"type": None, "value": None}
-
-    if html_id == '<' or html_id == '>' or html_id == '':
-        return id_obj
-
-    if ':' in html_id:
-        html_id = html_id.split(':')[0]
-    if html_id[0] == '#':
-        id_obj = {"type": "id", "value": html_id.replace('#', ''), "used": False}
-    elif html_id[0] == '.':
-        id_obj = {"type": "class", "value": html_id.replace('.', ''), "used": False}
-    else:
-        id_obj = {"type": "tag", "value": html_id, "used": False}
-    return id_obj
-
-
-def build_css_list(filename):
-    css_list = []
-    file = open(filename, mode='r', encoding='utf-8')
-    css_block = False
-
-    for line in file:
-        for prepared_html_id in line.split():
-            if prepared_html_id.count('.') > 1:
-                html_ids = prepared_html_id.split('.')
-                for i in range(0, len(html_ids)):
-                    html_ids[i] = "." + html_ids[i]
-            else:
-                html_ids = [prepared_html_id]
-            for html_id in html_ids:
-                if not css_block:
-                    if html_id == '{':
-                        css_block = True
-                        continue
-                    html_id = extract_id(html_id)
-                    if html_id["type"] is not None:
-                        if html_id not in css_list:
-                            css_list.append(html_id)
-                else:
-                    if html_id == '}':
-                        css_block = False
-    return css_list
 
 
 def evaluate_html_id(html_id):
@@ -187,45 +139,6 @@ def delete_all(css_location, css_list):
                     out_file.write(line)
 
 
-def get_result_keyword_arr(match):
-    match = match.replace("class=\"", "")
-    match = match.replace("id=\"", "")
-    match = match.replace("<", "")
-    match = match.replace(">", "")
-    match = match.replace("\"", "")
-    match = match.replace("\'", "")
-    return match.split()
-
-
-def scan_html_files(filenames, css_list):
-    for i in range(len(css_list)):
-        for filename in filenames:
-            file = open(filename, mode='r', encoding='utf-8').read()
-            if css_list[i]["type"] == "class":
-                reg = re.compile("class=[\"|\'].+[\"|\']")
-            elif css_list[i]["type"] == "id":
-                reg = re.compile("id=[\"|\'].+[\"|\']")
-            else:
-                reg = re.compile("<" + re.escape(css_list[i]["value"]))
-            results = re.findall(reg, file)
-            if results is None:
-                continue
-            for result in results:
-                result_arr = get_result_keyword_arr(result)
-                for keyword in result_arr:
-                    if css_list[i]["value"] == keyword:
-                        css_list[i]["used"] = True
-                        continue
-                if css_list[i]["used"]:
-                    continue
-            if css_list[i]["used"]:
-                continue
-
-    css_list = list(filter(lambda x: x["used"] is False, css_list))
-
-    return css_list
-
-
 def get_html_locations():
     html_locations = []
 
@@ -271,7 +184,6 @@ def get_html_locations():
     print("Found html files:")
     for filename in final_directories:
         print(filename)
-
     return final_directories
 
 
@@ -287,8 +199,8 @@ def main():
     print("\nBuilding CSS list..")
     css_list = build_css_list(css_location)
 
-    print("Done!\nThis program does not take CSS that is used in script files such as "
-          "JavaScript or TypeScript into account, you need to exclude these from the options. "
+    print("Done!\nThis program does not take CSS that is used in script files such as\n"
+          "JavaScript or TypeScript into account, you need to exclude these from the options.\n"
           "Would you like to go through the list and do that and/or correct eventual errors? [y/n]: ", end='')
     if input() == 'y':
         print("")
