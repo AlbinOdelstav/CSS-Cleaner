@@ -7,17 +7,29 @@
     color: blue;
 }
 
+/* Comment */
 .content h1 {
     margin-top: 50px;
 }
 
+/* Another comment */
 p {
     width: 120px;
 }
 
+/*
+    Multiline
+    Comment
+*/
 .content p:hover,
 .content h1:hover {
     color: blue;
+}
+
+.hover-animation:hover {
+    animation-name: animate; /* Comment about unused animation */
+    animation-duration: 2s;
+    background: blue;
 }
 
 .box {

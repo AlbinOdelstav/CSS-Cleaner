@@ -40,7 +40,7 @@ p input:hover {
 }
 
 .hover-animation:hover {
-    animation-name: animate;
+    animation-name: animate; /* Comment about unused animation */
     animation-duration: 2s;
     background: blue;
 }
