@@ -32,3 +32,54 @@ p input:hover {
 #not-used {
     background-color: cyan;
 }
+
+.hover-animation:hover {
+    animation-name: animate;
+    animation-duration: 2s;
+    background: blue;
+}
+
+@keyframes animate {
+    from {
+        transform: transformX(0%);
+    }
+    to {
+        transform: transformX(100%);
+    }
+}
+
+.box {
+    background-color: blue;
+    border-radius: 20px;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+}
+
+.box:hover {
+  animation-name: rotate;
+  animation-duration: 0.7s;
+}
+
+.box:not(:hover) {
+  animation-name: rotate-out;
+  animation-duration: 0.7s;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-out {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
+}
