@@ -20,3 +20,21 @@ p {
     color: blue;
 }
 
+.box {
+    background-color: blue;
+    border-radius: 20px;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+}
+
+.box:hover {
+  animation-name: rotate;
+  animation-duration: 0.7s;
+}
+
+.box:not(:hover) {
+  animation-name: rotate-out;
+  animation-duration: 0.7s;
+}
+
